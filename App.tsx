@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchLatestAINews } from './services/geminiService';
+import { sendTelegramMessage } from './services/telegramService';
 import { NewsData, LoadingState } from './types';
 import { NewsCard } from './components/NewsCard';
 import { Timer } from './components/Timer';
@@ -27,6 +28,10 @@ const App: React.FC = () => {
       
       setLoading({ status: 'complete', message: '' });
       setResetTimerTrigger(prev => prev + 1); 
+
+      // Send notification to Telegram (Non-blocking)
+      sendTelegramMessage(newData).catch(err => console.error("TG Push Failed", err));
+
     } catch (error) {
       setLoading({ status: 'error', message: '网络连接中断' });
     }
@@ -191,6 +196,8 @@ const App: React.FC = () => {
                         <span>节点: ASI-SHA-01</span>
                         <span>|</span>
                         <span>延迟: 12ms</span>
+                        <span>|</span>
+                        <span className="text-cyan-500">TELEGRAM: 已连接</span>
                     </div>
                     <div className="flex items-center gap-2">
                          <span className="text-[10px]">SECURE CONNECTION</span>
