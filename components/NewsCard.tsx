@@ -41,19 +41,19 @@ export const NewsCard: React.FC<NewsCardProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* Visual Area */}
-      <div className="relative w-full h-64 bg-[#020502] border-b border-[#1a3a1a] group-hover:border-[#00ff41]/50 overflow-hidden z-10">
+      {/* Visual Area - Reduced height from h-64 to h-32 (half size) */}
+      <div className="relative w-full h-32 bg-[#020502] border-b border-[#1a3a1a] group-hover:border-[#00ff41]/50 overflow-hidden z-10">
         
         {/* Grid overlay on image */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,65,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,65,0.03)_1px,transparent_1px)] bg-[length:30px_30px] pointer-events-none"></div>
         <div className="absolute top-0 right-0 p-2">
-            <svg className="w-8 h-8 text-[#00ff41]/20 animate-spin-slow" viewBox="0 0 100 100" fill="none" stroke="currentColor">
+            <svg className="w-6 h-6 text-[#00ff41]/20 animate-spin-slow" viewBox="0 0 100 100" fill="none" stroke="currentColor">
                 <circle cx="50" cy="50" r="40" strokeDasharray="20 20"/>
             </svg>
         </div>
         
-        {/* SVG Container */}
-        <div className="absolute inset-0 flex items-center justify-center p-6">
+        {/* SVG Container - Reduced padding for smaller container */}
+        <div className="absolute inset-0 flex items-center justify-center p-2">
            <div 
              className="w-full h-full opacity-80 group-hover:opacity-100 transition-all duration-500 filter saturate-0 group-hover:saturate-100 contrast-125 drop-shadow-[0_0_5px_rgba(0,255,65,0.3)]"
              dangerouslySetInnerHTML={{ __html: data.svgCode }}

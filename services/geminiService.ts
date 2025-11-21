@@ -81,7 +81,7 @@ export const fetchLatestAINews = async (
       Role: Elite Technical Illustrator for a Sci-Fi Intelligence Agency.
       Input News: "${headline} - ${summary}"
 
-      Task: Generate raw SVG code (1024x1024) representing a **TECHNICAL BLUEPRINT** of the specific subject in the news.
+      Task: Generate raw SVG code (512x512) representing a **TECHNICAL BLUEPRINT** of the specific subject in the news.
 
       **STEP 1: ANALYZE SUBJECT (CRITICAL)**
       You MUST classify the news into one of these categories and draw the specific object:
@@ -116,7 +116,7 @@ export const fetchLatestAINews = async (
       - **Glitch Elements**: A few random small squares or binary bits floating around.
 
       **OUTPUT FORMAT:**
-      - Return ONLY the <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">...</svg> string.
+      - Return ONLY the <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">...</svg> string.
       - Do not use markdown blocks.
     `;
 
