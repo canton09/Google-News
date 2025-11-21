@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchLatestAINews } from './services/geminiService';
 import { sendTelegramMessage } from './services/telegramService';
+import { saveNewsItem, getAllNewsHistory } from './services/dbService';
 import { NewsData, LoadingState } from './types';
 import { NewsCard } from './components/NewsCard';
 import { Timer } from './components/Timer';
@@ -12,11 +13,32 @@ const App: React.FC = () => {
   const [history, setHistory] = useState<NewsData[]>([]);
   const [loading, setLoading] = useState<LoadingState>({ status: 'idle', message: '' });
   const [resetTimerTrigger, setResetTimerTrigger] = useState(0);
+  const [dbInitialized, setDbInitialized] = useState(false);
 
+  // 1. Load History from DB on Mount
+  useEffect(() => {
+    const initData = async () => {
+      try {
+        const savedHistory = await getAllNewsHistory();
+        if (savedHistory.length > 0) {
+          setHistory(savedHistory);
+        }
+        setDbInitialized(true);
+      } catch (e) {
+        console.error("DB Init Failed", e);
+        setDbInitialized(true); // Proceed anyway
+      }
+    };
+    initData();
+  }, []);
+
+  // 2. Main Data Loading Logic
   const loadData = useCallback(async () => {
     setLoading({ status: 'searching', message: '正在启动神经搜索协议...' });
     
     try {
+      // Use *all* history headlines for deduplication context, not just what's in state if strictly limited
+      // But state 'history' is now the full DB record, so it is perfect.
       const existingHeadlines = history.map(item => item.headline);
       
       const newData = await fetchLatestAINews(
@@ -24,6 +46,10 @@ const App: React.FC = () => {
         existingHeadlines
       );
       
+      // Save to Database
+      await saveNewsItem(newData);
+
+      // Update State
       setHistory(prev => [newData, ...prev]);
       
       setLoading({ status: 'complete', message: '' });
@@ -33,16 +59,17 @@ const App: React.FC = () => {
       sendTelegramMessage(newData).catch(err => console.error("TG Push Failed", err));
 
     } catch (error) {
-      setLoading({ status: 'error', message: '网络连接中断' });
+      console.error(error);
+      setLoading({ status: 'error', message: '网络连接中断或 API 限制' });
     }
   }, [history]);
 
+  // 3. Initial Fetch (Only after DB is ready and if DB was empty)
   useEffect(() => {
-    if (history.length === 0) {
+    if (dbInitialized && history.length === 0 && loading.status === 'idle') {
       loadData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dbInitialized, history.length, loading.status, loadData]);
 
   return (
     <div className="min-h-screen bg-black text-[#00ff41] relative overflow-x-hidden font-mono selection:bg-[#00ff41] selection:text-black">
@@ -78,13 +105,13 @@ const App: React.FC = () => {
                     
                     <div className="flex flex-col">
                         <h1 className="font-orbitron font-bold text-3xl tracking-[0.1em] text-white leading-none group-hover:text-cyan-400 transition-colors">
-                            AI新闻<span className="text-[#00ff41]">.矩阵</span>
+                            AI新闻<span className="text-[#00ff41]">.数据库</span>
                         </h1>
                         <div className="flex items-center space-x-3 mt-1.5">
-                            <span className="text-[10px] text-[#00ff41]/60 tracking-widest border border-[#00ff41]/30 px-1">V.9.0.1</span>
+                            <span className="text-[10px] text-[#00ff41]/60 tracking-widest border border-[#00ff41]/30 px-1">DB.V.1.0</span>
                             <div className="flex items-center space-x-1">
                                 <span className="w-1 h-1 bg-cyan-500 rounded-full animate-pulse"></span>
-                                <span className="text-[10px] text-cyan-500/80 tracking-widest">LIVE STREAM</span>
+                                <span className="text-[10px] text-cyan-500/80 tracking-widest">LIVE ARCHIVE</span>
                             </div>
                         </div>
                     </div>
@@ -136,8 +163,8 @@ const App: React.FC = () => {
         {/* Main Content */}
         <main className="max-w-[1800px] mx-auto p-6 md:p-10 relative z-10">
             
-            {/* Initial Loading State */}
-            {history.length === 0 && loading.status !== 'complete' && loading.status !== 'idle' && (
+            {/* Initial Loading State (Only if history is truly empty AND we are fetching) */}
+            {history.length === 0 && loading.status !== 'idle' && loading.status !== 'complete' && (
                  <div className="flex flex-col items-center justify-center h-[60vh] text-center relative">
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
                         <TechSpinner className="w-[500px] h-[500px] text-[#00ff41]" />
@@ -188,27 +215,23 @@ const App: React.FC = () => {
             </div>
             
             {/* Footer */}
-            {history.length > 0 && (
-                <div className="mt-24 border-t border-[#1a3a1a] pt-10 flex flex-col md:flex-row justify-between items-center text-[#00ff41]/40">
-                    <div className="text-xs uppercase tracking-[0.2em] mb-4 md:mb-0 flex items-center gap-4">
-                        <span>系统状态: 在线</span>
-                        <span>|</span>
-                        <span>节点: ASI-SHA-01</span>
-                        <span>|</span>
-                        <span>延迟: 12ms</span>
-                        <span>|</span>
-                        <span className="text-cyan-500">TELEGRAM: 已连接</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                         <span className="text-[10px]">SECURE CONNECTION</span>
-                         <div className="flex space-x-1">
-                            <div className="h-1 w-1 bg-[#00ff41]"></div>
-                            <div className="h-1 w-1 bg-[#00ff41]"></div>
-                            <div className="h-1 w-1 bg-[#00ff41]"></div>
-                        </div>
+            <div className="mt-24 border-t border-[#1a3a1a] pt-10 flex flex-col md:flex-row justify-between items-center text-[#00ff41]/40">
+                <div className="text-xs uppercase tracking-[0.2em] mb-4 md:mb-0 flex items-center gap-4">
+                    <span>系统状态: 在线</span>
+                    <span>|</span>
+                    <span>数据库: {history.length} 条记录</span>
+                    <span>|</span>
+                    <span>延迟: 12ms</span>
+                </div>
+                <div className="flex items-center gap-2">
+                      <span className="text-[10px]">SECURE CONNECTION</span>
+                      <div className="flex space-x-1">
+                        <div className="h-1 w-1 bg-[#00ff41]"></div>
+                        <div className="h-1 w-1 bg-[#00ff41]"></div>
+                        <div className="h-1 w-1 bg-[#00ff41]"></div>
                     </div>
                 </div>
-            )}
+            </div>
         </main>
     </div>
   );
