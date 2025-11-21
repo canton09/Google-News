@@ -71,38 +71,53 @@ export const fetchLatestAINews = async (
     // 2. Generate SVG
     setStatus("正在构建目标蓝图...");
 
+    // Parsing Chinese response to help the SVG prompt understand the context
+    const lines = searchText.split('\n').filter(l => l.trim().length > 0);
+    const headline = lines[0]?.replace(/^(标题|Headline)[:：]\s*/i, '') || "系统更新";
+    const summary = lines.slice(1).join('').replace(/^(总结|Summary)[:：]\s*/i, '') || searchText;
+
     // Enhanced prompt for subject-aware SVG generation
     const svgPrompt = `
-      Context: "${searchText}"
+      Role: Elite Technical Illustrator for a Sci-Fi Intelligence Agency.
+      Input News: "${headline} - ${summary}"
+
+      Task: Generate raw SVG code (1024x1024) representing a **TECHNICAL BLUEPRINT** of the specific subject in the news.
+
+      **STEP 1: ANALYZE SUBJECT (CRITICAL)**
+      You MUST classify the news into one of these categories and draw the specific object:
       
-      Role: Sci-Fi UI Designer for a Cyberpunk Intelligence Terminal.
+      TYPE A: PERSON / CEO / LEADER (e.g. Sam Altman, Musk)
+      -> DRAW: A low-poly **WIREFRAME BUST (Head & Shoulders)**. Use geometric triangles to form a face. Do NOT draw a cartoon. It must look like 3D facial recognition scanning data.
       
-      Task: Generate raw SVG code (1024x1024) for a **Tactical Schematic / Blueprint** visualizing the SPECIFIC SUBJECT of the news.
+      TYPE B: HARDWARE / CHIPS / SERVERS (e.g. Nvidia, GPU, TPU)
+      -> DRAW: A top-down **MICROPROCESSOR SCHEMATIC**. Draw a central square core, surrounding logic blocks, and thousands of tiny circuit traces radiating outward.
       
-      **Content Logic (CRITICAL):**
-      - **Identify the Subject**: 
-        - If Person (e.g., Sam Altman, Elon Musk, CEO): Draw a **stylized wireframe portrait** or digital silhouette head formed by data lines.
-        - If Chip/Hardware (e.g., NVIDIA, GPU, TPU): Draw a complex **microprocessor schematic** with core logic blocks and circuitry.
-        - If Robot/Physical AI: Draw a **mechanical arm, robot head, or drone chassis** in wireframe.
-        - If Software/Model (e.g., GPT-5, Gemini): Draw a **complex neural network node map**, hyper-cube, or floating "brain" structure.
-        - If Business/Regulation: Draw a stylized **connected globe** or abstract fortress/shield structure.
+      TYPE C: ROBOTICS / DRONES
+      -> DRAW: A technical diagram of a **MECHANICAL JOINT**, **ROBOTIC HAND**, or **ANDROID SKULL**. Show internal gears and actuators.
       
-      **Visual Style Requirements:**
-      1. **Aesthetic**: Matrix Terminal / CAD Blueprint / HUD Display.
-      2. **Complexity**: EXTREMELY HIGH. Use hundreds of lines (<path>, <polyline>). NO solid blobs.
-      3. **Color Palette**:
-         - Background: #000000 (Black).
-         - Primary Lines: #00ff41 (Terminal Green) - Use for main subject contours.
-         - Accent Lines: #0ea5e9 (Cyber Blue) - Use for data flows and energy points.
-         - Highlights: #ffffff (White) - Use for glints or critical nodes.
-      4. **Decorations**: 
-         - Include targeting reticles, coordinate numbers (random decoration), scanning grids, and bounding boxes around the subject.
+      TYPE D: SOFTWARE / MODEL / LLM (e.g. GPT-5, Gemini)
+      -> DRAW: A 3D **NEURAL NETWORK TOPOLOGY**. Nodes connected by lines in a spherical or cubic formation.
       
-      **Technical Constraints:**
-      - viewBox="0 0 1024 1024".
-      - Use opacity (0.3 - 0.8) to create depth and "holographic" feel.
-      - **NO TEXT** labels inside the SVG (use shapes to represent text blocks).
-      - Output ONLY the <svg>...</svg> code string.
+      TYPE E: BUSINESS / REGULATION / GENERAL
+      -> DRAW: A stylized **WIREFRAME GLOBE** surrounded by orbital data rings and shield barriers.
+
+      **STEP 2: VISUAL STYLE (CAD / HUD)**
+      - **Stroke Style**: Thin lines (stroke-width="1" or "2"). NO thick cartoon outlines.
+      - **Fills**: Mostly transparent (fill="none"). Use low opacity fills (0.1 or 0.2) only for highlighting core areas.
+      - **Colors**: 
+         - Primary: #00ff41 (Terminal Green)
+         - Secondary: #0ea5e9 (Cyber Blue)
+         - Alert: #ef4444 (Red - use sparingly for critical nodes)
+      
+      **STEP 3: MANDATORY DECORATIONS (The "Complex" Part)**
+      - **Targeting Box**: Draw bracket corners [ ] around the main subject.
+      - **Data Lines**: Draw thin straight lines extending from the subject to small rectangles (representing text labels) at the edges.
+      - **Background Grid**: A subtle polar coordinate or square grid behind the subject.
+      - **Glitch Elements**: A few random small squares or binary bits floating around.
+
+      **OUTPUT FORMAT:**
+      - Return ONLY the <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">...</svg> string.
+      - Do not use markdown blocks.
     `;
 
     const svgResponse = await ai.models.generateContent({
@@ -122,16 +137,13 @@ export const fetchLatestAINews = async (
     const svgEnd = svgCode.lastIndexOf('</svg>');
     if (svgStart !== -1 && svgEnd !== -1) {
       svgCode = svgCode.substring(svgStart, svgEnd + 6);
+    } else {
+       // Fallback minimal SVG if generation fails
+       svgCode = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="10" width="80" height="80" fill="none" stroke="#00ff41" /><text x="50" y="50" text-anchor="middle" fill="#00ff41">DATA_ERR</text></svg>`;
     }
 
-    // Parsing Chinese response
-    const lines = searchText.split('\n').filter(l => l.trim().length > 0);
-    const headline = lines[0]?.replace(/^(标题|Headline)[:：]\s*/i, '') || "系统更新";
-    // Join the rest as summary
-    const summary = lines.slice(1).join('').replace(/^(总结|Summary)[:：]\s*/i, '') || searchText;
-
     return {
-      id: crypto.randomUUID(), // Generate unique ID
+      id: crypto.randomUUID(), 
       headline,
       summary,
       svgCode,
