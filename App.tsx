@@ -3,21 +3,19 @@ import { fetchLatestAINews } from './services/geminiService';
 import { NewsData, LoadingState } from './types';
 import { NewsCard } from './components/NewsCard';
 import { Timer } from './components/Timer';
+import { TechSpinner, CornerBracket, SyncIcon, AlertIcon } from './components/Decorations';
 
 const REFRESH_INTERVAL = 10 * 60 * 1000; // 10 Minutes
 
 const App: React.FC = () => {
-  // Changed to array to hold history
   const [history, setHistory] = useState<NewsData[]>([]);
   const [loading, setLoading] = useState<LoadingState>({ status: 'idle', message: '' });
   const [resetTimerTrigger, setResetTimerTrigger] = useState(0);
 
   const loadData = useCallback(async () => {
-    // Don't block UI if we already have content, just show loading indicator somewhere
-    setLoading({ status: 'searching', message: '正在连接全球资讯网络...' });
+    setLoading({ status: 'searching', message: '正在启动神经搜索协议...' });
     
     try {
-      // Pass existing headlines to avoid duplicates
       const existingHeadlines = history.map(item => item.headline);
       
       const newData = await fetchLatestAINews(
@@ -25,21 +23,16 @@ const App: React.FC = () => {
         existingHeadlines
       );
       
-      // Prepend new data to history
       setHistory(prev => [newData, ...prev]);
       
       setLoading({ status: 'complete', message: '' });
       setResetTimerTrigger(prev => prev + 1); 
     } catch (error) {
-      setLoading({ status: 'error', message: '连接中断，正在重试...' });
-      // Retry logic handled by user or next interval, 
-      // minimal auto-retry to prevent loops if API key is bad
+      setLoading({ status: 'error', message: '网络连接中断' });
     }
-  }, [history]); // Depend on history so we always have the latest list for deduplication
+  }, [history]);
 
-  // Initial Load
   useEffect(() => {
-    // Only load if history is empty on mount
     if (history.length === 0) {
       loadData();
     }
@@ -47,77 +40,143 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#050914] text-slate-200 font-sans selection:bg-cyan-500/30 selection:text-white">
+    <div className="min-h-screen bg-black text-[#00ff41] relative overflow-x-hidden font-mono selection:bg-[#00ff41] selection:text-black">
+        
+        {/* Background Decorations */}
+        <div className="fixed inset-0 z-0 pointer-events-none">
+            {/* Grid */}
+            <div className="absolute inset-0 bg-grid-pattern opacity-30"></div>
+            {/* Radial Gradient */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,40,0,0.2),transparent_80%)]"></div>
+            {/* Big Corner Brackets */}
+            <CornerBracket className="absolute top-8 left-8 w-32 h-32 text-[#00ff41]/10" />
+            <CornerBracket className="absolute top-8 right-8 w-32 h-32 text-[#00ff41]/10" flip={true} />
+            {/* Bottom decorative line */}
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00ff41]/30 to-transparent"></div>
+        </div>
+
         {/* Header */}
-        <header className="border-b border-slate-800/60 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 shadow-2xl">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                    <div className="relative flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+        <header className="bg-black/80 backdrop-blur-md border-b border-[#1a3a1a] sticky top-0 z-50 shadow-[0_5px_20px_rgba(0,0,0,0.8)]">
+            {/* Animated Scan Line under header */}
+            <div className="absolute bottom-0 left-0 h-[1px] bg-cyan-500/50 w-full animate-scan-x"></div>
+
+            <div className="max-w-[1800px] mx-auto px-4 md:px-8 h-24 flex items-center justify-between relative">
+                {/* Logo Area */}
+                <div className="flex items-center gap-5 group cursor-default">
+                    <div className="relative w-12 h-12 flex items-center justify-center bg-[#001000] border border-[#00ff41] group-hover:bg-[#00ff41]/10 transition-all duration-500 shadow-[0_0_10px_rgba(0,255,65,0.2)]">
+                        <TechSpinner className="absolute inset-0 w-full h-full text-[#00ff41] group-hover:animate-spin-slow" />
+                        <span className="font-orbitron font-bold text-xl text-white relative z-10">AI</span>
+                        {/* Glitch blocks */}
+                        <div className="absolute -top-1 -right-1 w-2 h-1 bg-cyan-500"></div>
+                        <div className="absolute -bottom-1 -left-1 w-2 h-1 bg-cyan-500"></div>
                     </div>
+                    
                     <div className="flex flex-col">
-                        <h1 className="font-bold text-xl tracking-tight text-white leading-none">AI<span className="text-cyan-500">新视界</span></h1>
-                        <span className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">全球实时智能简报</span>
+                        <h1 className="font-orbitron font-bold text-3xl tracking-[0.1em] text-white leading-none group-hover:text-cyan-400 transition-colors">
+                            AI新闻<span className="text-[#00ff41]">.矩阵</span>
+                        </h1>
+                        <div className="flex items-center space-x-3 mt-1.5">
+                            <span className="text-[10px] text-[#00ff41]/60 tracking-widest border border-[#00ff41]/30 px-1">V.9.0.1</span>
+                            <div className="flex items-center space-x-1">
+                                <span className="w-1 h-1 bg-cyan-500 rounded-full animate-pulse"></span>
+                                <span className="text-[10px] text-cyan-500/80 tracking-widest">LIVE STREAM</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div className="flex items-center space-x-4 bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800">
-                    <div className="hidden sm:block">
-                        <Timer 
-                            duration={REFRESH_INTERVAL} 
-                            onComplete={loadData} 
-                            resetTrigger={resetTimerTrigger}
-                        />
+                {/* Controls */}
+                <div className="flex items-center gap-8">
+                    <div className="hidden lg:flex flex-col items-end text-right border-r border-[#1a3a1a] pr-8 relative">
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#1a3a1a]"></div>
+                        <span className="text-[10px] text-[#00ff41]/50 uppercase tracking-wider mb-1">自动扫描倒计时</span>
+                        <div className="text-[#00ff41] font-bold">
+                             <Timer 
+                                duration={REFRESH_INTERVAL} 
+                                onComplete={loadData} 
+                                resetTrigger={resetTimerTrigger}
+                            />
+                        </div>
                     </div>
-                    <div className="h-4 w-px bg-slate-700 hidden sm:block"></div>
+
                     <button 
                         onClick={() => loadData()}
                         disabled={loading.status === 'searching' || loading.status === 'generating_art'}
-                        className="text-cyan-500 hover:text-cyan-400 text-sm font-medium transition-colors disabled:opacity-50 flex items-center text-xs"
+                        className="relative group overflow-hidden px-8 py-3 bg-[#0a1a0a] border border-[#00ff41] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0_0_20px_rgba(0,255,65,0.2)] transition-all"
                     >
-                        <svg className={`w-4 h-4 mr-1.5 ${loading.status === 'searching' || loading.status === 'generating_art' ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        {loading.status === 'searching' || loading.status === 'generating_art' ? '更新中...' : '立即刷新'}
+                        {/* Button background animation */}
+                        <div className="absolute inset-0 w-0 bg-[#00ff41] transition-all duration-300 ease-out group-hover:w-full opacity-10"></div>
+                        
+                        <span className="relative flex items-center font-bold tracking-wider text-sm text-[#00ff41] group-hover:text-white transition-colors">
+                            {loading.status === 'searching' || loading.status === 'generating_art' ? (
+                               <span className="flex items-center">
+                                   <SyncIcon className="w-4 h-4 mr-3 text-cyan-400" />
+                                   扫描执行中...
+                               </span>
+                            ) : (
+                                <>
+                                    <SyncIcon className="w-4 h-4 mr-3 text-cyan-400 group-hover:rotate-180 transition-transform duration-500" />
+                                    立即刷新
+                                </>
+                            )}
+                        </span>
+                        {/* Button corners */}
+                        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-500"></div>
+                        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-500"></div>
                     </button>
                 </div>
             </div>
         </header>
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto p-6 relative min-h-[calc(100vh-80px)]">
+        <main className="max-w-[1800px] mx-auto p-6 md:p-10 relative z-10">
             
-            {/* Ambient Background */}
-            <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/5 rounded-full blur-[120px]"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-[120px]"></div>
-            </div>
-
-            {/* Status Indicator for ongoing updates when history exists */}
-            {history.length > 0 && (loading.status === 'searching' || loading.status === 'generating_art') && (
-                <div className="mb-6 flex justify-center animate-pulse relative z-10">
-                     <span className="px-4 py-1 bg-cyan-900/30 text-cyan-400 text-xs rounded-full border border-cyan-500/30 flex items-center">
-                        <div className="w-2 h-2 bg-cyan-400 rounded-full mr-2 animate-bounce"></div>
-                        {loading.message}
-                     </span>
-                </div>
-            )}
-
-            {/* Initial Loading State (Empty History) */}
+            {/* Initial Loading State */}
             {history.length === 0 && loading.status !== 'complete' && loading.status !== 'idle' && (
-                 <div className="flex flex-col items-center justify-center min-h-[60vh] relative z-10">
-                    <div className="relative w-24 h-24 mb-8">
-                         <div className="absolute inset-0 border-t-2 border-cyan-500 rounded-full animate-spin"></div>
-                         <div className="absolute inset-3 border-r-2 border-purple-500 rounded-full animate-spin animation-delay-200"></div>
+                 <div className="flex flex-col items-center justify-center h-[60vh] text-center relative">
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                        <TechSpinner className="w-[500px] h-[500px] text-[#00ff41]" />
                     </div>
-                    <h2 className="text-2xl font-light text-white tracking-widest animate-pulse">{loading.message}</h2>
+                    <div className="relative z-10 bg-black/50 p-10 border border-[#1a3a1a] backdrop-blur-sm max-w-2xl">
+                        <div className="flex justify-center mb-6">
+                            <div className="relative">
+                                <div className="absolute inset-0 animate-ping bg-[#00ff41]/20 rounded-full"></div>
+                                <TechSpinner className="w-16 h-16 text-[#00ff41]" />
+                            </div>
+                        </div>
+                        <h2 className="text-3xl md:text-4xl font-orbitron text-white mb-4 animate-pulse">{loading.message}</h2>
+                        <div className="w-full bg-[#1a3a1a] h-1 mt-6 overflow-hidden">
+                            <div className="h-full bg-[#00ff41] animate-progress-bar"></div>
+                        </div>
+                        <p className="text-[#00ff41]/60 font-mono text-sm mt-4">
+                            正在建立与 Gemini 2.5 节点的加密连接...<br/>
+                            正在解析全球数据流...
+                        </p>
+                    </div>
                 </div>
             )}
 
-            {/* Grid Layout for 3x3 display */}
-            {/* grid-cols-1 (mobile), grid-cols-2 (tablet), grid-cols-3 (desktop) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+            {/* Error State */}
+            {loading.status === 'error' && (
+                 <div className="fixed bottom-10 right-10 z-50 bg-red-900/90 border border-red-500 text-white px-6 py-4 flex items-center shadow-[0_0_20px_rgba(220,38,38,0.5)]">
+                     <AlertIcon className="w-8 h-8 mr-4 animate-bounce" />
+                     <div>
+                         <h3 className="font-bold">连接失败</h3>
+                         <p className="text-sm text-red-200">{loading.message}</p>
+                     </div>
+                </div>
+            )}
+
+            {/* Status Bar when updating in background */}
+            {history.length > 0 && (loading.status === 'searching' || loading.status === 'generating_art') && (
+                <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 bg-black/90 border border-[#00ff41] px-8 py-4 flex items-center shadow-[0_0_30px_rgba(0,255,65,0.2)] clip-path-custom min-w-[300px] justify-center backdrop-blur-md">
+                     <TechSpinner className="w-5 h-5 text-[#00ff41] mr-4" />
+                     <span className="text-[#00ff41] tracking-widest font-bold text-sm animate-pulse">{loading.message}</span>
+                </div>
+            )}
+
+            {/* Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                 {history.map((item) => (
                     <NewsCard key={item.id} data={item} />
                 ))}
@@ -125,10 +184,22 @@ const App: React.FC = () => {
             
             {/* Footer */}
             {history.length > 0 && (
-                <div className="mt-12 text-center py-6 border-t border-slate-800/50 relative z-10">
-                    <p className="text-slate-600 text-xs font-mono">
-                        AI 模型: Gemini 2.5 Flash | 数据源: Google Search Grounding
-                    </p>
+                <div className="mt-24 border-t border-[#1a3a1a] pt-10 flex flex-col md:flex-row justify-between items-center text-[#00ff41]/40">
+                    <div className="text-xs uppercase tracking-[0.2em] mb-4 md:mb-0 flex items-center gap-4">
+                        <span>系统状态: 在线</span>
+                        <span>|</span>
+                        <span>节点: ASI-SHA-01</span>
+                        <span>|</span>
+                        <span>延迟: 12ms</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                         <span className="text-[10px]">SECURE CONNECTION</span>
+                         <div className="flex space-x-1">
+                            <div className="h-1 w-1 bg-[#00ff41]"></div>
+                            <div className="h-1 w-1 bg-[#00ff41]"></div>
+                            <div className="h-1 w-1 bg-[#00ff41]"></div>
+                        </div>
+                    </div>
                 </div>
             )}
         </main>
