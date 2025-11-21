@@ -69,33 +69,40 @@ export const fetchLatestAINews = async (
       .map(url => sources.find(s => s.url === url)!);
 
     // 2. Generate SVG
-    setStatus("正在执行高精度渲染...");
+    setStatus("正在构建目标蓝图...");
 
+    // Enhanced prompt for subject-aware SVG generation
     const svgPrompt = `
       Context: "${searchText}"
       
-      Task: Generate raw SVG code for a 1024x1024 ULTRA-COMPLEX Hacker/Cyberpunk terminal visualization.
+      Role: Sci-Fi UI Designer for a Cyberpunk Intelligence Terminal.
       
-      Design Requirements:
-      - Complexity: EXTREMELY HIGH. Do not use simple shapes.
-      - Style: High-tech schematic, futuristic blueprint, intricate circuitry, dense data visualization.
-      - Elements: 
-        - Detailed grid overlays and crosshairs.
-        - Dense clusters of small data bits (rectangles/dots).
-        - Concentric HUD rings and targeting reticles.
-        - Circuit board traces connecting nodes.
-        - "Matrix" style falling code rain effects (abstract representation).
-      - Colors: 
-        - Background: #000000 (Black).
-        - Primary: #00ff41 (Terminal Green).
-        - Accents: #22c55e (Neon Green), #0ea5e9 (Cyan/Blue) for high-energy nodes.
-      - Technical: 
-        - viewBox="0 0 1024 1024". 
-        - Use <defs> and <linearGradient> for glowing effects. 
-        - Use opacity layers to create depth.
-      - NO TEXT labels inside the SVG (abstract shapes only).
+      Task: Generate raw SVG code (1024x1024) for a **Tactical Schematic / Blueprint** visualizing the SPECIFIC SUBJECT of the news.
       
-      Output: ONLY the <svg>...</svg> code. No explanations.
+      **Content Logic (CRITICAL):**
+      - **Identify the Subject**: 
+        - If Person (e.g., Sam Altman, Elon Musk, CEO): Draw a **stylized wireframe portrait** or digital silhouette head formed by data lines.
+        - If Chip/Hardware (e.g., NVIDIA, GPU, TPU): Draw a complex **microprocessor schematic** with core logic blocks and circuitry.
+        - If Robot/Physical AI: Draw a **mechanical arm, robot head, or drone chassis** in wireframe.
+        - If Software/Model (e.g., GPT-5, Gemini): Draw a **complex neural network node map**, hyper-cube, or floating "brain" structure.
+        - If Business/Regulation: Draw a stylized **connected globe** or abstract fortress/shield structure.
+      
+      **Visual Style Requirements:**
+      1. **Aesthetic**: Matrix Terminal / CAD Blueprint / HUD Display.
+      2. **Complexity**: EXTREMELY HIGH. Use hundreds of lines (<path>, <polyline>). NO solid blobs.
+      3. **Color Palette**:
+         - Background: #000000 (Black).
+         - Primary Lines: #00ff41 (Terminal Green) - Use for main subject contours.
+         - Accent Lines: #0ea5e9 (Cyber Blue) - Use for data flows and energy points.
+         - Highlights: #ffffff (White) - Use for glints or critical nodes.
+      4. **Decorations**: 
+         - Include targeting reticles, coordinate numbers (random decoration), scanning grids, and bounding boxes around the subject.
+      
+      **Technical Constraints:**
+      - viewBox="0 0 1024 1024".
+      - Use opacity (0.3 - 0.8) to create depth and "holographic" feel.
+      - **NO TEXT** labels inside the SVG (use shapes to represent text blocks).
+      - Output ONLY the <svg>...</svg> code string.
     `;
 
     const svgResponse = await ai.models.generateContent({
